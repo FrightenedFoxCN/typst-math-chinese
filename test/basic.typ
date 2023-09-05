@@ -1,4 +1,4 @@
-#import "../template.typ": conf, quote, def, thm, rm
+#import "../template.typ": conf, quote, def, thm, rm, pf, eg
 
 #show: doc => conf(doc)
 
@@ -68,10 +68,22 @@ $ (a^2 + b^2)(c^2 + d^2) >= ((a c)^2 + (b d)^2)^2 $ <cauchy>
     #lorem(30)    
 ]
 
+#pf[
+    对于定理，我们可以给它加上证明。证明最后会自带一个 qed 符号。
+
+    #lorem(20)
+]
+
 #rm[
     这是一个注记。
 
     #lorem(50)
+]
+
+#pagebreak()
+
+#eg(supplement: "这里是一个例子")[
+    我们也可以在这里加上一个例子，它上下由两条虚线和正文分隔开，字体为楷体以示区分。
 ]
 
 == 这里测试一下代码块

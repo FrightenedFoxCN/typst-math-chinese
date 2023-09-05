@@ -78,13 +78,20 @@
         width: 100%,
         fill: blockcolor,
         inset: 8pt,
+        breakable: true,
+        stroke: blockcolor,
     )[
-        #counter.step()
+        #if counter != none [
+            #counter.step()
+        ]
         #align(left)[
             #set list(marker: (strong[•]))
             #show strong: set text(emphcolor) 
             #strong[
-                #leading #counter.display()
+                #leading 
+                #if counter != none [
+                    #counter.display()
+                ]
                 #if supplement != none [
                     （#supplement）
                 ]
@@ -106,7 +113,7 @@
 #let thmcounter = counter("thm")
 
 #let thmblockcolor = rgb(209, 255, 226)
-#let thmemphcolor = rgb(41, 142, 88)
+#let thmemphcolor = rgb(0, 134, 24)
 
 #let thm(term, supplement: none, counter: thmcounter) = mathenv(term, supplement, thmcounter, thmblockcolor, thmemphcolor, "定理")
 
@@ -117,13 +124,92 @@
 
 #let rm(term, supplement: none, counter: rmcounter) = mathenv(term, supplement, rmcounter, rmblockcolor, rmemphcolor, "注记")
 
+#let compmathenv(term, 
+    supplement,
+    counter,
+    blockcolor,
+    emphcolor,
+    leading
+) = figure(
+    block(
+        width: 100%,
+        inset: 8pt,
+        breakable: true,
+    )[
+        #if counter != none [
+            #counter.step()
+        ]
+        #align(left)[
+            #set list(marker: (strong[•]))
+            #set text(
+                font: ("Times New Roman", "KaiTi"),
+                style: "normal"
+            )
+            #line(
+                length: 100%,
+                stroke: (paint: emphcolor, dash: "dashed")
+            )
+            #box(
+                fill: blockcolor,
+                outset: (y: 2pt),
+            )[
+                #set text(emphcolor)
+                #leading 
+                #if counter != none [
+                    #counter.display()
+                ]
+                #if supplement != none [
+                    （#supplement）
+                ]
+            ]
+            #term
+            #line(
+                length: 100%,
+                stroke: (paint: emphcolor, dash: "dashed")
+            )
+        ]
+    ],
+    kind: leading,
+    supplement: [#leading]
+)
+
+#let egcounter = counter("eg")
+
+#let egblockcolor = rgb(231, 217, 255)
+#let egemphcolor = rgb(130, 110, 217)
+
+#let eg(term, supplement: none, counter: egcounter) = compmathenv(term, supplement, egcounter, egblockcolor, egemphcolor, "例")
+
+#let pfcounter = counter("pf")
+
+#let pfblockcolor = thmblockcolor
+#let pfemphcolor = rgb(8, 130, 215)
+
+#let pf(term) = block(
+        width: 100%,
+        inset: 8pt,
+        breakable: true,
+        above: 0em,
+        stroke: (paint: thmblockcolor, thickness: 1pt)
+    )[
+        #align(left)[
+            #set list(marker: (strong[•]))
+            #set text(
+                font: ("Times New Roman", "KaiTi"),
+                style: "normal"
+            )
+            #[
+                #set text(thmemphcolor)
+                证明
+            ]
+            #term
+            #align(right)[#sym.qed]
+        ]
+    ]
+
 #let conf(doc) = {
     set heading (
         numbering: chinesenumbering
-    )
-
-    set math.equation (
-        numbering: "(1)"
     )
 
     show heading: it => block(
@@ -148,7 +234,7 @@
     )
 
     show emph: set text (
-        font: ("Times New Roman", "KaiTi")
+        font: ("Times New Roman", "KaiTi"),
     )
 
     show strong: set text (
@@ -167,6 +253,8 @@
         indent: 2em,
     )
 
+    show figure: set block(breakable: true)
+
     show ref: it => {
         let eq = math.equation
         let el = it.element
@@ -176,10 +264,10 @@
                 link(el.location(), [第 #numbering(
                         el.numbering, ..counter(heading).at(el.location())
                     ) 节])
-            } else if el.func() == eq {
-                link(el.location(), [公式 #numbering(
-                        el.numbering, ..counter(eq).at(el.location())
-                    )])
+            // } else if el.func() == eq {
+            //     link(el.location(), [公式 #numbering(
+            //             el.numbering, ..counter(eq).at(el.location())
+            //         )])
             } else if el.func() == figure {
                 link(el.location(), [#el.supplement #numbering(el.numbering, ..el.counter.at(el.location()))])
             }
