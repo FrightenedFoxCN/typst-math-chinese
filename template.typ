@@ -1,3 +1,5 @@
+#import "@preview/showybox:1.1.0": *
+
 #let chinesenumber(num, standalone: false) = if num < 11 {
     ("零", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十").at(num)
 } else if num < 100 {
@@ -110,12 +112,8 @@
 
 #let def(term, supplement: none, counter: defcounter) = mathenv(term, supplement, defcounter, defblockcolor, defemphcolor, "定义")
 
-#let thmcounter = counter("thm")
-
 #let thmblockcolor = rgb(209, 255, 226)
 #let thmemphcolor = rgb(0, 134, 24)
-
-#let thm(term, supplement: none, counter: thmcounter) = mathenv(term, supplement, thmcounter, thmblockcolor, thmemphcolor, "定理")
 
 #let rmcounter = counter("rm")
 
@@ -180,18 +178,8 @@
 
 #let eg(term, supplement: none, counter: egcounter) = compmathenv(term, supplement, egcounter, egblockcolor, egemphcolor, "例")
 
-#let pfcounter = counter("pf")
-
-#let pfblockcolor = thmblockcolor
-#let pfemphcolor = rgb(8, 130, 215)
-
-#let pf(term) = block(
-        width: 100%,
-        inset: 8pt,
-        breakable: true,
-        above: 0em,
-        stroke: (paint: thmblockcolor, thickness: 1pt)
-    )[
+#let change_footer_style(content, emphcolor, leading2) = {
+    if content != none [
         #align(left)[
             #set list(marker: (strong[•]))
             #set text(
@@ -199,13 +187,53 @@
                 style: "normal"
             )
             #[
-                #set text(thmemphcolor)
-                证明
+                #set text(emphcolor)
+                #leading2
             ]
-            #term
-            #align(right)[#sym.qed]
+            #content
         ]
-    ]
+        #align(right)[#sym.qed]
+    ] else {
+        ""
+    }
+}
+
+#let mathenvWithCompanion(heading, counter, emphcolor, blockcolor, leading1, leading2, supplement, content) = figure(
+    showybox(
+        frame: (
+            body-color: blockcolor,
+            radius: 0pt,
+            border-color: blockcolor,
+            footer-color: white
+        ),
+        title-style: (
+            color: black
+        ),
+        footer: change_footer_style(content, emphcolor, leading2)
+    )[
+        #if counter != none [
+            #counter.step()
+        ]
+        #set list(marker: (strong[•]))
+        #show strong: set text(emphcolor) 
+        #strong[
+            #leading1
+            #if counter != none [
+                #counter.display()
+            ]
+            #if supplement != none [
+                （#supplement）
+            ]
+        ]
+        #heading
+    ],
+    kind: leading1,
+    supplement: [#leading1]
+)
+
+#let thmcounter = counter("thm")
+
+#let thm(heading, proof: none, supplement: none) = mathenvWithCompanion(heading, thmcounter, thmemphcolor, thmblockcolor, "定理", "证明", supplement, proof)
 
 #let conf(doc) = {
     set heading (

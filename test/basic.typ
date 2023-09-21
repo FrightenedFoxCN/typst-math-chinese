@@ -1,4 +1,4 @@
-#import "../template.typ": conf, quote, def, thm, rm, pf, eg
+#import "../template.typ": *
 
 #show: doc => conf(doc)
 
@@ -42,7 +42,7 @@ $ (a^2 + b^2)(c^2 + d^2) >= ((a c)^2 + (b d)^2)^2 $ <cauchy>
 
 #def(supplement: "对象")[以下是定义的内容。] <defobject>
 
-我们可以引用一个定义，例如上面的 @defobject 给出了对对象的定义。而下面的 @defcategory 给出了对范畴的定义。
+我们可以引用一个定义，例如上面的 @defobject 给出了对对象的定义。而下面的 @defcategory 给出了对范畴的定义。@thm_ref 则给出了……
 
 #def(supplement: "范畴")[
     我们称以下资料构成一个范畴…… 
@@ -62,17 +62,16 @@ $ (a^2 + b^2)(c^2 + d^2) >= ((a c)^2 + (b d)^2)^2 $ <cauchy>
 + 看起来还没法实现
 ]
 
-#thm(supplement: "Yonada")[
-    设 $cal(C)$ 为一局部小范畴……
+#thm(
+    [这里是一个定理。], 
+    proof: [这里是它的证明。],
+    supplement: "这里是补充说明"
+) <thm_ref>
 
-    #lorem(30)    
-]
-
-#pf[
-    对于定理，我们可以给它加上证明。证明最后会自带一个 qed 符号。
-
-    #lorem(20)
-]
+#thm(
+    [这里是一个没有证明的定理。], 
+    supplement: "这里是补充说明"
+)
 
 #rm[
     这是一个注记。

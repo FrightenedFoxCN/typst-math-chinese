@@ -13,7 +13,7 @@
 然后引入模板：
 
 ```
-#import "../template.typ": conf, quote, def, thm, rm, eg, pf
+#import "../template.typ": conf, quote, def, thm, rm, eg
 
 #show: doc => conf(doc)
 ```
@@ -33,10 +33,12 @@
 
 - `quote` 模块提供引文块，可选地提供 `author` 参数给出作者。
 - `def` 等数学模块均继承自 `mathenv`，可选地提供标号后的附注。可以引入 `mathenv` 自定义额外的数学块，需要自行给定配色方案。
+- `thm` 利用 `showybox` 实现，写证明和定理不再需要分开了。其他部分也会陆续改用此种实现方式。
 
 ### 待完成
 
 - [ ] 公式的引用必须要求给公式打上标号，但有时候标号显示会带来麻烦，所以暂时删掉了；
 - [ ] 其它定理的同义词：引理、推论等；
 - [ ] 猜想、问题、动机；
-- [ ] 配色调整。
+- [ ] 配色调整；
+- [ ] 用 `showybox` 重写其他的环境。
