@@ -209,7 +209,8 @@
         title-style: (
             color: black
         ),
-        footer: change_footer_style(content, emphcolor, leading2)
+        footer: change_footer_style(content, emphcolor, leading2),
+        breakable: true,
     )[
         #if counter != none [
             #counter.step()
