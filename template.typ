@@ -41,6 +41,44 @@
     }
 }) // 中文编号
 
+#let change_footer_style(content, emphcolor, leading) = {
+    if content != none [
+        #align(left)[
+            #set list(marker: (strong[•]))
+            #set text(
+                font: ("Times New Roman", "KaiTi"),
+                style: "normal"
+            )
+            #[
+                #set text(emphcolor)
+                #leading
+            ]
+            #content
+        ]
+        #align(right)[#sym.qed]
+    ] else {
+        ""
+    }
+}
+
+#let change_body_style(counter, emphcolor, leading, supplement, heading) = [
+        #if counter != none [
+            #counter.step()
+        ]
+        #set list(marker: (strong[•]))
+        #show strong: set text(emphcolor) 
+        #strong[
+            #leading
+            #if counter != none [
+                #counter.display()
+            ]
+            #if supplement != none [
+                （#supplement）
+            ]
+        ]
+        #heading
+    ]
+
 #let quoteblockcolor = rgb(239, 240, 243)
 
 #let quote(term, author: none) = align(center)[
@@ -65,7 +103,6 @@
                 —— #author
             ]
         ]
-        
     ]
 ]
 
@@ -76,31 +113,15 @@
     emphcolor,
     leading
 ) = figure(
-    block(
-        width: 100%,
-        fill: blockcolor,
-        inset: 8pt,
+    showybox(
+        frame: (
+            body-color: blockcolor,
+            radius: 0pt,
+            border-color: blockcolor,
+        ),
         breakable: true,
-        stroke: blockcolor,
-    )[
-        #if counter != none [
-            #counter.step()
-        ]
-        #align(left)[
-            #set list(marker: (strong[•]))
-            #show strong: set text(emphcolor) 
-            #strong[
-                #leading 
-                #if counter != none [
-                    #counter.display()
-                ]
-                #if supplement != none [
-                    （#supplement）
-                ]
-            ]
-            #term
-        ]
-    ],
+        change_body_style(counter, emphcolor, leading, supplement, term)
+    ),
     kind: leading,
     supplement: [#leading]
 )
@@ -129,43 +150,19 @@
     emphcolor,
     leading
 ) = figure(
-    block(
-        width: 100%,
-        inset: 8pt,
-        breakable: true,
+    showybox(
+        frame: (
+            body-color: white,
+            radius: 0pt,
+            border-color: emphcolor,
+            dash: "dashed"
+        ),
     )[
-        #if counter != none [
-            #counter.step()
-        ]
-        #align(left)[
-            #set list(marker: (strong[•]))
-            #set text(
+        #set text(
                 font: ("Times New Roman", "KaiTi"),
                 style: "normal"
-            )
-            #line(
-                length: 100%,
-                stroke: (paint: emphcolor, dash: "dashed")
-            )
-            #box(
-                fill: blockcolor,
-                outset: (y: 2pt),
-            )[
-                #set text(emphcolor)
-                #leading 
-                #if counter != none [
-                    #counter.display()
-                ]
-                #if supplement != none [
-                    （#supplement）
-                ]
-            ]
-            #term
-            #line(
-                length: 100%,
-                stroke: (paint: emphcolor, dash: "dashed")
-            )
-        ]
+        )
+        #change_body_style(counter, emphcolor, leading, supplement, term)
     ],
     kind: leading,
     supplement: [#leading]
@@ -178,26 +175,6 @@
 
 #let eg(term, supplement: none, counter: egcounter) = compmathenv(term, supplement, egcounter, egblockcolor, egemphcolor, "例")
 
-#let change_footer_style(content, emphcolor, leading2) = {
-    if content != none [
-        #align(left)[
-            #set list(marker: (strong[•]))
-            #set text(
-                font: ("Times New Roman", "KaiTi"),
-                style: "normal"
-            )
-            #[
-                #set text(emphcolor)
-                #leading2
-            ]
-            #content
-        ]
-        #align(right)[#sym.qed]
-    ] else {
-        ""
-    }
-}
-
 #let mathenvWithCompanion(heading, counter, emphcolor, blockcolor, leading1, leading2, supplement, content) = figure(
     showybox(
         frame: (
@@ -206,28 +183,13 @@
             border-color: blockcolor,
             footer-color: white
         ),
-        title-style: (
+        footer-style: (
             color: black
         ),
-        footer: change_footer_style(content, emphcolor, leading2),
         breakable: true,
-    )[
-        #if counter != none [
-            #counter.step()
-        ]
-        #set list(marker: (strong[•]))
-        #show strong: set text(emphcolor) 
-        #strong[
-            #leading1
-            #if counter != none [
-                #counter.display()
-            ]
-            #if supplement != none [
-                （#supplement）
-            ]
-        ]
-        #heading
-    ],
+        footer: change_footer_style(content, emphcolor, leading2),
+        change_body_style(counter, emphcolor, leading1, supplement, heading)
+    ),
     kind: leading1,
     supplement: [#leading1]
 )
