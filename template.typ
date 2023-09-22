@@ -42,7 +42,7 @@
 }) // 中文编号
 
 #let change_footer_style(content, emphcolor, leading) = {
-    if content != none [
+    if content != none {block(width: 100%, )[
         #align(left)[
             #set list(marker: (strong[•]))
             #set text(
@@ -56,12 +56,12 @@
             #content
         ]
         #align(right)[#sym.qed]
-    ] else {
+    ]} else {
         ""
     }
 }
 
-#let change_body_style(counter, emphcolor, leading, supplement, heading) = [
+#let change_body_style(counter, emphcolor, leading, supplement, heading) = block(width: 100%)[
         #if counter != none [
             #counter.step()
         ]
@@ -119,7 +119,7 @@
             border-color: blockcolor,
         ),
         breakable: true,
-        change_body_style(counter, emphcolor, leading, supplement, term)
+        change_body_style(counter, emphcolor, leading, supplement, term),
     ),
     kind: leading,
     supplement: [#leading]

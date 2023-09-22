@@ -1,273 +1,99 @@
-#import "@preview/showybox:1.1.0": *
+#import "../template.typ": *
 
-#let chinesenumber(num, standalone: false) = if num < 11 {
-    ("零", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十").at(num)
-} else if num < 100 {
-    if calc.rem(num, 10) == 0 {
-        chinesenumber(calc.floor(num / 10)) + "十"
-    } else if num < 20 and standalone {
-        "十" + chinesenumber(calc.rem(num, 10))
-    } else {
-        chinesenumber(calc.floor(num / 10)) + "十" + chinesenumber(calc.rem(num, 10))
-    }
-} else if num < 1000 {
-    let left = chinesenumber(calc.floor(num / 100)) + "百"
-    if calc.rem(num, 100) == 0 {
-        left
-    } else if calc.rem(num, 100) < 10 {
-        left + "零" + chinesenumber(calc.rem(num, 100))
-    } else {
-        left + chinesenumber(calc.rem(num, 100))
-    }
-} else {
-    let left = chinesenumber(calc.floor(num / 1000)) + "千"
-    if calc.rem(num, 1000) == 0 {
-        left
-    } else if calc.rem(num, 1000) < 10 {
-        left + "零" + chinesenumber(calc.rem(num, 1000))
-    } else if calc.rem(num, 1000) < 100 {
-        left + "零" + chinesenumber(calc.rem(num, 1000))
-    } else {
-        left + chinesenumber(calc.rem(num, 1000))
-    }
-}
+#show: doc => conf(doc)
 
-#let chinesenumbering(..nums, location: none, brackets: false) = locate(loc => {
-    let actual_loc = if location == none { loc } else { location }
-    if nums.pos().len() == 1 {
-      "第" + chinesenumber(nums.pos().first(), standalone: true) + "章"
-    } else {
-      numbering("1.1", ..nums)
-    }
-}) // 中文编号
+= 引言
 
-#let change_footer_style(content, emphcolor, leading) = {
-    if content != none {block(width: 100%, )[
-        #align(left)[
-            #set list(marker: (strong[•]))
-            #set text(
-                font: ("Times New Roman", "KaiTi"),
-                style: "normal"
-            )
-            #[
-                #set text(emphcolor)
-                #leading
-            ]
-            #content
-        ]
-        #align(right)[#sym.qed]
-    ]} else {
-        ""
-    }
-}
+这是一份中文的测试文稿。
 
-#let change_body_style(counter, emphcolor, leading, supplement, heading) = block(width: 100%)[
-        #if counter != none [
-            #counter.step()
-        ]
-        #set list(marker: (text(emphcolor)[•]))
-        #text(font: ("Times New Roman", "SimHei"), emphcolor, [
-            #leading
-            #if counter != none [
-                #counter.display()
-            ]
-            #if supplement != none [
-                （#supplement）
-            ]
-        ])
-        #heading
-    ]
+文本测试
 
-#let quoteblockcolor = rgb(239, 240, 243)
+#emph[这是一个强调块]
 
-#let quote(term, author: none) = align(center)[
-    #block(
-        width: 80%,
-        fill: quoteblockcolor,
-        inset: 8pt,
-    )[
-        #set align (left)
-        #set text (
-            font: ("Times New Roman", "FangSong")
-        )
-        #set par (
-            first-line-indent: 2em
-        )
-        #show par: set block(
-            spacing: 0.65em
-        )
-        #term
-        #align(right)[
-            #if author != none [
-                —— #author
-            ]
-        ]
-    ]
+$ a^2 + b^2 = c^2 $ <pydagoras>
+
+#strong[这一部分被加粗了]
+
+#quote(author: "作者")[这是一段非常非常非常非常非常长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长的引文。]
+
+#quote()[这是一段非常非常非常非常非常长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长的引文，不知道谁说的。]
+
+#quote(author: "作者")[
+    这是一段很短的引文。
 ]
 
-#let mathenv(term, 
-    supplement,
-    counter,
-    blockcolor,
-    emphcolor,
-    leading
-) = figure(
-    showybox(
-        frame: (
-            body-color: blockcolor,
-            radius: 0pt,
-            border-color: blockcolor,
-        ),
-        breakable: true,
-        change_body_style(counter, emphcolor, leading, supplement, term),
-    ),
-    kind: leading,
-    supplement: [#leading]
+== 下面的小节使用小数字 <numeral>
+
+#lorem(50)
+
+#lorem(100)
+
+== 继续到下一节
+
+#quote()[#lorem(30)]
+
+我们可以引用 @numeral 来证明 @pydagoras。下面的 @cauchy
+
+$ (a^2 + b^2)(c^2 + d^2) >= ((a c)^2 + (b d)^2)^2 $ <cauchy>
+
+是它的一个自然推广。
+
+== 下面这一节测试一些数学模块
+
+#def(supplement: "对象")[以下是定义的内容。] <defobject>
+
+我们可以引用一个定义，例如上面的 @defobject 给出了对对象的定义。而下面的 @defcategory 给出了对范畴的定义。@thm_ref 则给出了……
+
+#def(supplement: "范畴")[
+    我们称以下资料构成一个范畴…… 
+
+    #lorem(50)
+] <defcategory>
+
+#def[如果想要在定义中使用列表，我们希望：
+
+- 对于 bullet list 的 marker
+- 它的颜色也是定义的强调色
+- 例如在此是蓝色
+
++ 对于 numbered list 我们
++ 希望也是如此
++ 但是目前参照其源代码中 `numbering` 的写法
++ 看起来还没法实现
+]
+
+#thm(
+    [这里是一个定理。], 
+    proof: [这里是它的证明。],
+    supplement: "这里是补充说明"
+) <thm_ref>
+
+#thm(
+    [这里是一个没有证明的定理。], 
+    supplement: "这里是补充说明"
 )
 
-#let defcounter = counter("def")
+#rm[
+    这是一个注记。
 
-#let defblockcolor = rgb(220, 227, 248)
-#let defemphcolor = rgb(31, 119, 184)
+    #lorem(50)
+]
 
-#let def(term, supplement: none, counter: defcounter) = mathenv(term, supplement, defcounter, defblockcolor, defemphcolor, "定义")
+#pagebreak()
 
-#let thmblockcolor = rgb(209, 255, 226)
-#let thmemphcolor = rgb(0, 134, 24)
+#eg(supplement: "这里是一个例子")[
+    我们也可以在这里加上一个例子，它由虚线和正文分隔开，字体为楷体以示区分。
+]
 
-#let rmcounter = counter("rm")
+== 这里测试一下代码块
 
-#let rmblockcolor = rgb(255, 237, 193)
-#let rmemphcolor = rgb(215, 94, 106)
-
-#let rm(term, supplement: none, counter: rmcounter) = mathenv(term, supplement, rmcounter, rmblockcolor, rmemphcolor, "注记")
-
-#let compmathenv(term, 
-    supplement,
-    counter,
-    blockcolor,
-    emphcolor,
-    leading
-) = figure(
-    showybox(
-        frame: (
-            body-color: white,
-            radius: 0pt,
-            border-color: emphcolor,
-            dash: "dashed",
-            thickness: (y: 1pt, rest: 0pt),
-            inset: (x: 0em, y: 1em)
-        ),
-        breakable: true,
-    )[
-        #set text(
-                font: ("Times New Roman", "KaiTi"),
-                style: "normal"
-        )
-        #change_body_style(counter, emphcolor, leading, supplement, term)
-    ],
-    kind: leading,
-    supplement: [#leading]
-)
-
-#let egcounter = counter("eg")
-
-#let egblockcolor = rgb(231, 217, 255)
-#let egemphcolor = rgb(130, 110, 217)
-
-#let eg(term, supplement: none, counter: egcounter) = compmathenv(term, supplement, egcounter, egblockcolor, egemphcolor, "例")
-
-#let mathenvWithCompanion(heading, counter, emphcolor, blockcolor, leading1, leading2, supplement, content) = figure(
-    showybox(
-        frame: (
-            body-color: blockcolor,
-            radius: 0pt,
-            border-color: blockcolor,
-            footer-color: white
-        ),
-        footer-style: (
-            color: black
-        ),
-        breakable: true,
-        footer: change_footer_style(content, emphcolor, leading2),
-        change_body_style(counter, emphcolor, leading1, supplement, heading)
-    ),
-    kind: leading1,
-    supplement: [#leading1]
-)
-
-#let thmcounter = counter("thm")
-
-#let thm(heading, proof: none, supplement: none) = mathenvWithCompanion(heading, thmcounter, thmemphcolor, thmblockcolor, "定理", "证明", supplement, proof)
-
-#let conf(doc) = {
-    set heading (
-        numbering: chinesenumbering
-    )
-
-    show heading: it => block(
-        below: {
-            if it.level == 1 {
-                25pt // 大层级与正文的距离
-            } else {
-                15pt // 小层级与正文的距离
-            }
-        },
-    )[
-        #set text (
-            font: ("Times New Roman", "SimHei"), // 标题字体
-            weight: "regular"
-        )
-        #counter(heading).display()
-        #it.body
-    ]
-
-    set text(
-        font: ("Times New Roman", "SimSun")
-    )
-
-    show emph: set text (
-        font: ("Times New Roman", "KaiTi"),
-    )
-
-    show strong: set text (
-        font: ("Times New Roman", "SimHei")
-    )
-
-    show raw: set text (
-        font: ("Consolas")
-    )
-
-    set enum(
-        indent: 2em,
-    )
-
-    set list(
-        indent: 2em,
-    )
-
-    show figure: set block(breakable: true)
-
-    show ref: it => {
-        let eq = math.equation
-        let el = it.element
-        if el != none {
-            if el.func() == heading {
-                // for heading
-                link(el.location(), [第 #numbering(
-                        el.numbering, ..counter(heading).at(el.location())
-                    ) 节])
-            // } else if el.func() == eq {
-            //     link(el.location(), [公式 #numbering(
-            //             el.numbering, ..counter(eq).at(el.location())
-            //         )])
-            } else if el.func() == figure {
-                link(el.location(), [#el.supplement #numbering(el.numbering, ..el.counter.at(el.location()))])
-            }
-        } else {
-            it
-        }
-    }
-
-    doc
+```rs
+fn helloworld() {
+    println!("helloworld!");
 }
+```
+
+== 这里测试一些额外功能的可能性
+
+/ 范畴: @defcategory
+/ 对象: @defobject
