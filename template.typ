@@ -65,9 +65,8 @@
         #if counter != none [
             #counter.step()
         ]
-        #set list(marker: (strong[•]))
-        #show strong: set text(emphcolor) 
-        #strong[
+        #set list(marker: (text(emphcolor)[•]))
+        #text(font: ("Times New Roman", "SimHei"), emphcolor, [
             #leading
             #if counter != none [
                 #counter.display()
@@ -75,7 +74,7 @@
             #if supplement != none [
                 （#supplement）
             ]
-        ]
+        ])
         #heading
     ]
 
