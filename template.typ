@@ -154,7 +154,9 @@
             body-color: white,
             radius: 0pt,
             border-color: emphcolor,
-            dash: "dashed"
+            dash: "dashed",
+            thickness: (y: 1pt, rest: 0pt),
+            inset: (x: 0em, y: 1em)
         ),
         breakable: true,
     )[
