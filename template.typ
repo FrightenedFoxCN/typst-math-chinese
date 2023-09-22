@@ -157,6 +157,7 @@
             border-color: emphcolor,
             dash: "dashed"
         ),
+        breakable: true,
     )[
         #set text(
                 font: ("Times New Roman", "KaiTi"),
