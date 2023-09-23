@@ -194,7 +194,7 @@
         footer: change_footer_style(content, emphcolor, leading2, qed),
         change_body_style(counter, emphcolor, leading1, supplement, heading)
     ),
-    kind: leading1,
+    kind: leading2,
     supplement: [#leading1]
 )
 
