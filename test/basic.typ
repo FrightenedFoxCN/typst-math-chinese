@@ -24,7 +24,7 @@ $ a^2 + b^2 = c^2 $ <pydagoras>
     这是一段很短的引文。
 ]
 
-== 下面的小节使用小数字 <numeral>
+== 下面的小节使用小数字
 
 #lorem(50)
 
@@ -34,23 +34,19 @@ $ a^2 + b^2 = c^2 $ <pydagoras>
 
 #quote()[#lorem(30)]
 
-我们可以引用 @numeral 来证明 @pydagoras。下面的 @cauchy
-
 $ (a^2 + b^2)(c^2 + d^2) >= ((a c)^2 + (b d)^2)^2 $ <cauchy>
 
 是它的一个自然推广。
 
 == 下面这一节测试一些数学模块
 
-#def(supplement: "对象")[以下是定义的内容。] <defobject>
-
-我们可以引用一个定义，例如上面的 @defobject 给出了对对象的定义。而下面的 @defcategory 给出了对范畴的定义。@thm_ref 则给出了……
+#def(supplement: "对象")[以下是定义的内容。]
 
 #def(supplement: "范畴")[
     我们称以下资料构成一个范畴…… 
 
     #lorem(50)
-] <defcategory>
+]
 
 #def[如果想要在定义中使用列表，我们希望：
 
@@ -118,9 +114,6 @@ fn helloworld() {
 
 == 这里测试一些额外功能的可能性
 
-/ 范畴: @defcategory
-/ 对象: @defobject
-
 可以使用 `#endofchapter()` 开启新的章节。
 
 #endofchapter()
@@ -131,3 +124,19 @@ fn helloworld() {
     [在新的章节中，定理等环境的编号都会被重置。],
     proof: [你看代码去啊！]
 )
+
+#endofchapter()
+
+#show : doc => set-appendix(doc)
+
+= 这是一个附录
+
+== 在附录中的小标题将使用字母
+
+#def[
+    附录中的定义和定理
+]
+
+#prop[
+    也都应该重新编号.
+]

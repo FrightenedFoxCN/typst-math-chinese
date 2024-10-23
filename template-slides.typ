@@ -1,85 +1,5 @@
 #import "@preview/showybox:2.0.2": *
 
-#let chinese_number(num, standalone: false) = if num < 11 {
-    ("零", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十").at(num)
-} else if num < 100 {
-    if calc.rem(num, 10) == 0 {
-        chinese_number(calc.floor(num / 10)) + "十"
-    } else if num < 20 and standalone {
-        "十" + chinese_number(calc.rem(num, 10))
-    } else {
-        chinese_number(calc.floor(num / 10)) + "十" + chinese_number(calc.rem(num, 10))
-    }
-} else if num < 1000 {
-    let left = chinese_number(calc.floor(num / 100)) + "百"
-    if calc.rem(num, 100) == 0 {
-        left
-    } else if calc.rem(num, 100) < 10 {
-        left + "零" + chinese_number(calc.rem(num, 100))
-    } else {
-        left + chinese_number(calc.rem(num, 100))
-    }
-} else {
-    let left = chinese_number(calc.floor(num / 1000)) + "千"
-    if calc.rem(num, 1000) == 0 {
-        left
-    } else if calc.rem(num, 1000) < 10 {
-        left + "零" + chinese_number(calc.rem(num, 1000))
-    } else if calc.rem(num, 1000) < 100 {
-        left + "零" + chinese_number(calc.rem(num, 1000))
-    } else {
-        left + chinese_number(calc.rem(num, 1000))
-    }
-}
-
-// 在这里改变章节标题
-#let chapter_numbering(nums) = {
-    "第" + chinese_number(nums, standalone: true) + "章"
-    // "Lecture " + str(nums)
-}
-
-#let lecture_numbering_inner(nums) = {
-    "第" + chinese_number(nums, standalone: true) + "讲"
-    // "Lecture " + str(nums)
-}
-
-#let lecture_numbering(..nums, location: none) = {
-    if nums.pos().len() == 1 {
-        lecture_numbering_inner(nums.pos().first())
-    } else {
-        numbering("1.1", ..nums)
-    }
-}
-
-// 编号方式
-#let chinese_numbering(..nums, location: none) = {
-    if nums.pos().len() == 1 {
-        chapter_numbering(nums.pos().first())
-    } else {
-        numbering("1.1", ..nums)
-    }
-}
-
-#let appendix_numbering(..nums, location: none) = {
-    if nums.pos().len() == 1 {
-        "附录" + numbering("A.", ..nums)
-    } else {
-        numbering("A.1", ..nums)
-    }
-}
-
-#let set-appendix(doc) = {
-    counter(heading).update(0)
-
-    set heading (
-        numbering: appendix_numbering
-    )
-
-    doc
-}
-
-
-// 脚注的格式修改
 #let change_footer_style(content, emphcolor, leading, qed) = if content != none {block(width: 100%, )[
     #align(left)[
         #set list(marker: (strong[•]))
@@ -100,7 +20,6 @@
     ""
 }
 
-// 正文的格式修改
 #let change_body_style(counter, emphcolor, leading, supplement, heading) = block(width: 100%)[
     #if counter != none {
         counter.step()
@@ -109,7 +28,7 @@
     #text(font: ("Times New Roman", "SimHei"), emphcolor)[
         #leading
         #if counter != none [
-            #context counter.display()
+            #counter.display()
         ]
         #if supplement != none [
             （#supplement）
@@ -118,10 +37,8 @@
     #heading
 ]
 
-// 引文块的颜色
 #let quoteblockcolor = rgb(239, 240, 243)
 
-// 引文块的格式比较特殊，单独设定
 #let quote(term, author: none) = align(center)[
     #block(
         width: 80%,
@@ -133,7 +50,9 @@
             font: ("Times New Roman", "FangSong")
         )
         #set par (
-            first-line-indent: 2em,
+            first-line-indent: 2em
+        )
+        #show par: set block(
             spacing: 0.65em
         )
         #term
@@ -161,6 +80,7 @@
             border-color: blockcolor,
         ),
         breakable: true,
+        width: 95%,
         change_body_style(counter, emphcolor, leading, supplement, term),
     ),
     kind: leading,
@@ -185,6 +105,7 @@
             inset: (x: 0em, y: 1em)
         ),
         breakable: true,
+        width: 95%,
     )[
         #set text(
                 font: ("Times New Roman", "KaiTi"),
@@ -220,7 +141,8 @@
         ),
         breakable: true,
         footer: change_footer_style(content, emphcolor, leading2, qed),
-        change_body_style(counter, emphcolor, leading1, supplement, heading)
+        change_body_style(counter, emphcolor, leading1, supplement, heading),
+        width: 95%
     ),
     kind: leading2,
     supplement: [#leading1]
@@ -260,8 +182,6 @@
 
 #let lemma(heading, proof: none, supplement: none) = mathenvWithCompanion(heading, supplement, thmcounter, thmemphcolor, thmblockcolor, "引理", "证明", proof, qed: true)
 
-#let prop(heading, proof: none, supplement: none) = mathenvWithCompanion(heading, supplement, thmcounter, thmemphcolor, thmblockcolor, "命题", "证明", proof, qed: true)
-
 #let excounter = counter("ex")
 #let exemphcolor = rgb(35, 155, 171)
 #let exblockcolor = rgb(161, 255, 238)
@@ -270,11 +190,11 @@
 
 #let endofchapter() = {
     // clearing all counters
-    context defcounter.update(0)
-    context rmcounter.update(0)
-    context egcounter.update(0)
-    context thmcounter.update(0)
-    context excounter.update(0)
+    defcounter.update(0)
+    rmcounter.update(0)
+    egcounter.update(0)
+    thmcounter.update(0)
+    excounter.update(0)
     [#pagebreak()]
 }
 
@@ -288,25 +208,20 @@
     #counter(heading).update(0)
 ]
 
-#let conf(doc, chapter_numbering: chinese_numbering) = {
-    set heading (
-        numbering: chapter_numbering
-    )
-
+#let conf(doc) = {
     show heading: it => block(
         below: {
             if it.level == 1 {
                 25pt // 大层级与正文的距离
             } else {
-                15pt // 小层级与正文的距离
+                40pt // 小层级与正文的距离
             }
         },
     )[
         #set text (
-            font: ("Times New Roman", "SimHei"), // 标题字体
+            font: ("Jetbrains Mono", "SimHei"), // 标题字体
             weight: "regular"
         )
-        #counter(heading).display()
         #it.body
     ]
 
@@ -335,27 +250,6 @@
     )
 
     show figure: set block(breakable: true)
-
-    show ref: it => {
-        let eq = math.equation
-        let el = it.element
-        if el != none {
-            if el.func() == heading {
-                // for heading
-                link(el.location(), [#numbering(
-                        el.numbering, ..counter(heading).at(el.location())
-                    )])
-            // } else if el.func() == eq {
-            //     link(el.location(), [公式 #numbering(
-            //             el.numbering, ..counter(eq).at(el.location())
-            //         )])
-            } else if el.func() == figure {
-                link(el.location(), [#el.supplement #numbering(el.numbering, ..el.counter.at(el.location()))])
-            }
-        } else {
-            it
-        }
-    }
 
     doc
 }
