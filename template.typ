@@ -1,4 +1,4 @@
-#import "@preview/showybox:2.0.2": *
+#import "@preview/showybox:2.0.4": *
 
 #let chinese_number(num, standalone: false) = if num < 11 {
     ("零", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十").at(num)
@@ -60,9 +60,9 @@
     }
 }
 
-#let appendix_numbering(..nums, location: none) = {
+#let appendix_numbering(..nums, location: none) = { 
     if nums.pos().len() == 1 {
-        "附录" + numbering("A.", ..nums)
+        "附录 " + numbering("A.1", ..nums)
     } else {
         numbering("A.1", ..nums)
     }
@@ -71,7 +71,7 @@
 #let set-appendix(doc) = {
     counter(heading).update(0)
 
-    set heading (
+    set heading(
         numbering: appendix_numbering
     )
 
@@ -102,15 +102,15 @@
 
 // 正文的格式修改
 #let change_body_style(counter, emphcolor, leading, supplement, heading) = block(width: 100%)[
-    #if counter != none {
-        counter.step()
+    #if (context counter) != none {
+        context counter.step()
     }
     #set list(marker: (text(emphcolor)[•]))
     #text(font: ("Times New Roman", "SimHei"), emphcolor)[
         #leading
-        #if counter != none [
-            #context counter.display()
-        ]
+        #if (context counter) != none {
+            context counter.display()
+        }
         #if supplement != none [
             （#supplement）
         ]
@@ -128,12 +128,14 @@
         fill: quoteblockcolor,
         inset: 8pt,
     )[
-        #set align (left)
-        #set text (
+        #set align(left)
+        #set text(
             font: ("Times New Roman", "FangSong")
         )
-        #set par (
-            first-line-indent: 2em,
+        #set par(
+            first-line-indent: 2em
+        )
+        #set par(
             spacing: 0.65em
         )
         #term
@@ -184,7 +186,7 @@
             thickness: (y: 1pt),
             inset: (x: 0em, y: 1em)
         ),
-        breakable: true,
+        // breakable: true,
     )[
         #set text(
                 font: ("Times New Roman", "KaiTi"),
@@ -273,6 +275,7 @@
     context defcounter.update(0)
     context rmcounter.update(0)
     context egcounter.update(0)
+    context conjcounter.update(0)
     context thmcounter.update(0)
     context excounter.update(0)
     [#pagebreak()]
@@ -289,7 +292,7 @@
 ]
 
 #let conf(doc, chapter_numbering: chinese_numbering) = {
-    set heading (
+    set heading(
         numbering: chapter_numbering
     )
 
@@ -302,7 +305,7 @@
             }
         },
     )[
-        #set text (
+        #set text(
             font: ("Times New Roman", "SimHei"), // 标题字体
             weight: "regular"
         )
@@ -314,15 +317,15 @@
         font: ("Times New Roman", "SimSun")
     )
 
-    show emph: set text (
+    show emph: set text(
         font: ("Times New Roman", "KaiTi"),
     )
 
-    show strong: set text (
+    show strong: set text(
         font: ("Times New Roman", "SimHei")
     )
 
-    show raw: set text (
+    show raw: set text(
         font: ("Consolas")
     )
 
@@ -332,6 +335,11 @@
 
     set list(
         indent: 2em,
+    )
+
+    set par(
+        leading: 1em,
+        first-line-indent: 2em
     )
 
     show figure: set block(breakable: true)
@@ -356,6 +364,13 @@
             it
         }
     }
+
+    // show math.equation: x => {
+    //     show math.text: set text(
+    //         font: ("Times New Roman", "KaiTi")
+    //     )
+    //     x
+    // }
 
     doc
 }
