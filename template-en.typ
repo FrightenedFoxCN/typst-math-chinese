@@ -1,23 +1,99 @@
-#import "@preview/showybox:2.0.2": *
+#import "@preview/ctheorems:1.1.3": *
 
-#let change_footer_style(content, emphcolor, leading, qed) = if content != none {block(width: 100%, )[
-    #align(left)[
-        #set list(marker: (strong[•]))
-        #set text(
-            font: ("Times New Roman"),
-        )
-        #[
-            #set text(emphcolor)
-            #leading
+#let theorem-font = ("Times New Roman")
+
+#let make-boxed-theorem(
+    identifier,
+    heading,
+    blockcolor,
+    emphcolor,
+    border: none,
+    stroke: none,
+    inset: (x: 1.2em, y: 0.8em),
+    base: "heading",
+    base_level: 1,
+) = thmbox(
+    identifier,
+    heading,
+    fill: blockcolor,
+    stroke: if stroke == none {
+        if border == none { blockcolor } else { border }
+    } else {
+        stroke
+    },
+    radius: 0pt,
+    inset: inset,
+    breakable: true,
+    base: base,
+    base_level: base_level,
+    supplement: heading,
+    padding: (top: 0.45em, bottom: 0.45em),
+    separator: [#h(0.5em)],
+    titlefmt: title => text(font: theorem-font, weight: "bold", emphcolor)[#title],
+    namefmt: name => text(font: theorem-font, weight: "bold", emphcolor)[(#name)],
+    bodyfmt: body => [
+        #set text(font: theorem-font)
+        #set list(marker: (text(emphcolor)[•]))
+        #set enum(numbering: n => text(emphcolor)[#n.])
+        #body
+    ],
+)
+
+#let make-companion-theorem(
+    identifier,
+    heading,
+    blockcolor,
+    emphcolor,
+    base: "heading",
+    base_level: 1,
+) = thmenv(
+    identifier,
+    base,
+    base_level,
+    (name, number, body, companion: none, companion-label: "Pf.", qed: false) => {
+        let title = heading
+        if number != none {
+            title += " " + number
+        }
+
+        pad(top: 0.45em, bottom: 0.45em)[
+            #block(
+                width: 100%,
+                stroke: blockcolor + 2pt,
+                radius: 0pt,
+                inset: 0pt,
+                breakable: true,
+            )[
+                #stack(dir: ttb, spacing: 0pt,
+                    block(width: 100%, fill: blockcolor, inset: (x: 1.2em, y: 0.8em), breakable: true)[
+                        #set text(font: theorem-font)
+                        #set list(marker: (text(emphcolor)[•]))
+                        #set enum(numbering: n => text(emphcolor)[#n.])
+                        #text(font: theorem-font, weight: "bold", emphcolor)[#title]
+                        #if name != none [
+                            #text(font: theorem-font, weight: "bold", emphcolor)[(#name)]
+                        ]
+                        #h(0.5em)
+                        #body
+                    ],
+                    if companion != none {
+                        block(width: 100%, fill: white, inset: (x: 1.2em, y: 0.8em), breakable: true)[
+                            #set text(font: theorem-font)
+                            #set list(marker: (strong[•]))
+                            #set enum(numbering: n => text(emphcolor)[#n.])
+                            #text(emphcolor, weight: "bold")[#companion-label]
+                            #h(0.5em)
+                            #companion
+                            #if qed [
+                                #h(1fr)#sym.qed
+                            ]
+                        ]
+                    } else { none },
+                )
+            ]
         ]
-        #content
-    ]
-    #if qed {
-        align(right)[#sym.qed]
     }
-]} else {
-    ""
-}
+).with(supplement: heading)
 
 #let chapter_numbering(..nums) = {
     if (nums.pos().len() == 1) {
@@ -36,151 +112,131 @@
     }
 }
 
-#let change_body_style(counter, emphcolor, leading, supplement, heading) = block(width: 100%)[
-    #if counter != none {
-        counter.step()
-    }
-    #set list(marker: (text(emphcolor)[•]))
-    #text(
-        font: ("Times New Roman"),
-        weight: "bold", 
-        emphcolor)[
-        #leading
-        #if counter != none [
-            #context counter.display()
-        ]
-        #if supplement != none [
-            (#supplement)
-        ]
-    ]
-    #heading
-]
-
-// 数学环境块
-#let mathenv(
-    term, // 正文 
-    supplement, // 补充说明（括号里面的东西）
-    counter, // 计数器，需要在模板中定义
-    blockcolor, // 块颜色，指底色
-    emphcolor, // 强调色，补充说明和编号的颜色
-    leading // 编号前面写什么
-) = showybox(
-    frame: (
-        body-color: blockcolor,
-        radius: 0pt,
-        border-color: blockcolor,
-    ),
-    breakable: true,
-    change_body_style(counter, emphcolor, leading, supplement, term),
-)
-
-// 补充数学环境块，例如例子块
-#let compmathenv(
-    term, 
-    supplement,
-    counter,
-    emphcolor,
-    leading
-) = showybox(
-    frame: (
-        body-color: white,
-        radius: 0pt,
-        border-color: emphcolor,
-        dash: "dashed",
-        thickness: (y: 1pt),
-        inset: (x: 0em, y: 1em)
-    ),
-    breakable: true,
-)[
-    #set text(
-        font: ("Times New Roman"),
-    )
-    #change_body_style(counter, emphcolor, leading, supplement, term)
-]
-
-// 带证明/解答的环境块
-#let mathenvWithCompanion(
-    heading, // 正文
-    supplement, 
-    counter,
-    emphcolor, 
-    blockcolor, 
-    leading1, // 第一块的编号提示词
-    leading2, // 第二块的编号提示词
-    content, // 第二块的内容
-    qed: false // 是否需要有 qed 标识
-) = showybox(
-    frame: (
-        body-color: blockcolor,
-        radius: 0pt,
-        border-color: blockcolor,
-        footer-color: white
-    ),
-    footer-style: (
-        color: black
-    ),
-    breakable: true,
-    footer: change_footer_style(content, emphcolor, leading2, qed),
-    change_body_style(counter, emphcolor, leading1, supplement, heading)
-)
-
-
 // 以下是一些预定义的环境块
 #let defcounter = counter("def")
 #let defblockcolor = rgb(220, 227, 248)
 #let defemphcolor = rgb(31, 119, 184)
 
-#let def(term, supplement: none, counter: defcounter) = mathenv(term, supplement, defcounter, defblockcolor, defemphcolor, "Definition")
+#let definition-env = make-boxed-theorem("definition", "Definition", defblockcolor, defemphcolor)
+#let def(term, supplement: none, counter: defcounter) = definition-env(supplement)[#term]
 
 #let rmcounter = counter("rm")
 #let rmblockcolor = rgb(255, 237, 193)
 #let rmemphcolor = rgb(215, 94, 106)
 
-#let rm(term, supplement: none, counter: rmcounter) = mathenv(term, supplement, rmcounter, rmblockcolor, rmemphcolor, "Remark")
+#let remark-env = make-boxed-theorem("remark", "Remark", rmblockcolor, rmemphcolor)
+#let rm(term, supplement: none, counter: rmcounter) = remark-env(supplement)[#term]
 
 #let conjcounter = counter("conj")
 #let conjblockcolor = rgb(255, 213, 206)
 #let conjemphcolor = rgb(233, 66, 66)
 
-#let conj(term, supplement: none, counter: conjcounter) = mathenv(term, supplement, conjcounter, conjblockcolor, conjemphcolor, "Conjecture")
+#let conjecture-env = make-boxed-theorem("conjecture", "Conjecture", conjblockcolor, conjemphcolor)
+#let conj(term, supplement: none, counter: conjcounter) = conjecture-env(supplement)[#term]
 
 #let egcounter = counter("eg")
 #let egemphcolor = rgb(130, 110, 217)
 
-#let eg(term, supplement: none, counter: egcounter) = compmathenv(term, supplement, egcounter, egemphcolor, "Example")
+#let example-env = make-boxed-theorem(
+    "example",
+    "Example",
+    white,
+    egemphcolor,
+    stroke: (paint: egemphcolor, thickness: 2pt, dash: "dashed"),
+    inset: (x: 1.2em, y: 1em),
+)
+#let eg(term, supplement: none, counter: egcounter) = example-env(supplement)[#term]
 
 #let thmcounter = counter("thm")
 #let thmblockcolor = rgb(209, 255, 226)
 #let thmemphcolor = rgb(0, 134, 24)
 
-#let thm(heading, proof: none, supplement: none) = mathenvWithCompanion(heading, supplement, thmcounter, thmemphcolor, thmblockcolor, "Theorem", "Pf.", proof, qed: true)
+#let theorem-env = make-companion-theorem("theorem", "Theorem", thmblockcolor, thmemphcolor)
+#let corollary-env = make-companion-theorem("theorem", "Corollary", thmblockcolor, thmemphcolor)
+#let lemma-env = make-companion-theorem("theorem", "Lemma", thmblockcolor, thmemphcolor)
 
-#let coro(heading, proof: none, supplement: none) = mathenvWithCompanion(heading, supplement, thmcounter, thmemphcolor, thmblockcolor, "Corollary", "Pf.", proof, qed: true)
+#let thm(heading, proof: none, supplement: none) = theorem-env(
+    supplement,
+    companion: proof,
+    companion-label: "Pf.",
+    qed: true,
+)[#heading]
 
-#let prop(heading, proof: none, supplement: none) = mathenvWithCompanion(heading, supplement, thmcounter, thmemphcolor, thmblockcolor, "Proposition", "Pf.", proof, qed: true)
+#let coro(heading, proof: none, supplement: none) = corollary-env(
+    supplement,
+    companion: proof,
+    companion-label: "Pf.",
+    qed: true,
+)[#heading]
 
-#let lemma(heading, proof: none, supplement: none) = mathenvWithCompanion(heading, supplement, thmcounter, thmemphcolor, thmblockcolor, "Lemma", "Pf.", proof, qed: true)
+#let lemma(heading, proof: none, supplement: none) = lemma-env(
+    supplement,
+    companion: proof,
+    companion-label: "Pf.",
+    qed: true,
+)[#heading]
 
 #let excounter = counter("ex")
 #let exemphcolor = rgb(35, 155, 171)
 #let exblockcolor = rgb(161, 255, 238)
 
-#let ex(heading, solution: none, supplement: none) = mathenvWithCompanion(heading, supplement, excounter, exemphcolor, exblockcolor, "Exercise", "Sol.", solution)
+#let exercise-env = make-companion-theorem("exercise", "Exercise", exblockcolor, exemphcolor)
+#let ex(heading, solution: none, supplement: none) = exercise-env(
+    supplement,
+    companion: solution,
+    companion-label: "Sol.",
+)[#heading]
+
+#let theorem-ref-color(identifier) = if identifier == "definition" {
+    defemphcolor
+} else if identifier == "remark" {
+    rmemphcolor
+} else if identifier == "conjecture" {
+    conjemphcolor
+} else if identifier == "example" {
+    egemphcolor
+} else if identifier == "exercise" {
+    exemphcolor
+} else {
+    thmemphcolor
+}
 
 #let endofchapter() = {
-    // clearing all counters
-    defcounter.update(0)
-    rmcounter.update(0)
-    egcounter.update(0)
-    thmcounter.update(0)
-    excounter.update(0)
     [#pagebreak()]
 }
 
-#let conf(doc) = {
-    set heading (
+#let conf(doc, chapter_numbering: chapter_numbering) = {
+    show: thmrules.with(qed-symbol: $qed$)
+    set heading(
         numbering: chapter_numbering
     )
+
+    show ref: it => {
+        let el = it.element
+        if el != none and el.func() == figure and el.kind == "thmenv" {
+            let supplement = el.supplement
+            if it.citation.supplement != none {
+                supplement = it.citation.supplement
+            }
+
+            let loc = el.location()
+            let thms = query(selector(<meta:thmenvcounter>).after(loc))
+            let identifier = thms.first().value
+            let number = thmcounters.at(thms.first().location()).at("latest")
+            let refbody = [#supplement~#numbering(el.numbering, ..number)]
+            link(
+                it.target,
+                text(
+                    font: theorem-font,
+                    weight: "bold",
+                    theorem-ref-color(identifier),
+                    refbody,
+                ),
+            )
+        } else {
+            it
+        }
+    }
     
     doc
 }
@@ -188,7 +244,7 @@
 #let set-appendix(doc) = {
     counter(heading).update(0)
 
-    set heading (
+    set heading(
         numbering: appendix_numbering
     )
 

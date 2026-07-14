@@ -1,376 +1,370 @@
-#import "@preview/showybox:2.0.4": *
+#import "@preview/ctheorems:1.1.3": *
 
-#let chinese_number(num, standalone: false) = if num < 11 {
-    ("零", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十").at(num)
-} else if num < 100 {
-    if calc.rem(num, 10) == 0 {
-        chinese_number(calc.floor(num / 10)) + "十"
-    } else if num < 20 and standalone {
-        "十" + chinese_number(calc.rem(num, 10))
-    } else {
-        chinese_number(calc.floor(num / 10)) + "十" + chinese_number(calc.rem(num, 10))
-    }
-} else if num < 1000 {
-    let left = chinese_number(calc.floor(num / 100)) + "百"
-    if calc.rem(num, 100) == 0 {
-        left
-    } else if calc.rem(num, 100) < 10 {
-        left + "零" + chinese_number(calc.rem(num, 100))
-    } else {
-        left + chinese_number(calc.rem(num, 100))
-    }
-} else {
-    let left = chinese_number(calc.floor(num / 1000)) + "千"
-    if calc.rem(num, 1000) == 0 {
-        left
-    } else if calc.rem(num, 1000) < 10 {
-        left + "零" + chinese_number(calc.rem(num, 1000))
-    } else if calc.rem(num, 1000) < 100 {
-        left + "零" + chinese_number(calc.rem(num, 1000))
-    } else {
-        left + chinese_number(calc.rem(num, 1000))
-    }
-}
-
-// 在这里改变章节标题
 #let chapter_numbering(nums) = {
-    "第" + chinese_number(nums, standalone: true) + "章"
-    // "Lecture " + str(nums)
+  numbering("第一章", nums)
 }
 
 #let lecture_numbering_inner(nums) = {
-    "第" + chinese_number(nums, standalone: true) + "讲"
-    // "Lecture " + str(nums)
+  numbering("第一讲", nums)
 }
 
 #let lecture_numbering(..nums, location: none) = {
-    if nums.pos().len() == 1 {
-        lecture_numbering_inner(nums.pos().first())
-    } else {
-        numbering("1.1", ..nums)
-    }
+  if nums.pos().len() == 1 {
+    lecture_numbering_inner(nums.pos().first())
+  } else {
+    numbering("1.1", ..nums)
+  }
 }
 
 // 编号方式
 #let chinese_numbering(..nums, location: none) = {
-    if nums.pos().len() == 1 {
-        chapter_numbering(nums.pos().first())
-    } else {
-        numbering("1.1", ..nums)
-    }
+  if nums.pos().len() == 1 {
+    chapter_numbering(nums.pos().first())
+  } else {
+    numbering("1.1", ..nums)
+  }
 }
 
-#let appendix_numbering(..nums, location: none) = { 
-    if nums.pos().len() == 1 {
-        "附录 " + numbering("A.1", ..nums)
-    } else {
-        numbering("A.1", ..nums)
-    }
+#let appendix_numbering(..nums, location: none) = {
+  if nums.pos().len() == 1 {
+    numbering("附录 A", ..nums)
+  } else {
+    numbering("A.1", ..nums)
+  }
 }
 
 #let set-appendix(doc) = {
-    counter(heading).update(0)
+  counter(heading).update(0)
 
-    set heading(
-        numbering: appendix_numbering
-    )
+  set heading(
+    numbering: appendix_numbering,
+  )
 
-    doc
+  doc
 }
 
+#let theorem-title-font = ("Times New Roman", "Heiti SC")
+#let theorem-companion-font = ("Times New Roman", "Kaiti SC")
 
-// 脚注的格式修改
-#let change_footer_style(content, emphcolor, leading, qed) = if content != none {block(width: 100%, )[
-    #align(left)[
-        #set list(marker: (strong[•]))
-        #set text(
-            font: ("Times New Roman", "KaiTi"),
-            style: "normal"
-        )
-        #[
-            #set text(emphcolor)
-            #leading
-        ]
-        #content
-    ]
-    #if qed {
-        align(right)[#sym.qed]
-    }
-]} else {
-    ""
-}
-
-// 正文的格式修改
-#let change_body_style(counter, emphcolor, leading, supplement, heading) = block(width: 100%)[
-    #if (context counter) != none {
-        context counter.step()
+#let make-boxed-theorem(
+  identifier,
+  heading,
+  blockcolor,
+  emphcolor,
+  stroke: none,
+  inset: (x: 1.2em, y: 0.8em),
+  body-font: none,
+  base: "heading",
+  base_level: 1,
+) = thmbox(
+  identifier,
+  heading,
+  fill: blockcolor,
+  stroke: if stroke == none { blockcolor } else { stroke },
+  radius: 0pt,
+  inset: inset,
+  breakable: true,
+  base: base,
+  base_level: base_level,
+  supplement: heading,
+  padding: (top: 0.45em, bottom: 0.45em),
+  separator: [#h(0.5em)],
+  titlefmt: title => text(font: theorem-title-font, emphcolor)[#h(-2em) #title],
+  namefmt: name => text(font: theorem-title-font, emphcolor)[（#name）],
+  bodyfmt: body => [
+    #if body-font != none {
+      set text(font: body-font, style: "normal")
     }
     #set list(marker: (text(emphcolor)[•]))
-    #text(font: ("Times New Roman", "SimHei"), emphcolor)[
-        #leading
-        #if (context counter) != none {
-            context counter.display()
-        }
-        #if supplement != none [
-            （#supplement）
-        ]
+    #set enum(numbering: n => text(emphcolor)[#n.])
+    #body
+    #parbreak() // some ad hoc thing
+  ],
+)
+
+#let make-companion-theorem(
+  identifier,
+  heading,
+  blockcolor,
+  emphcolor,
+  base: "heading",
+  base_level: 1,
+) = thmenv(
+  identifier,
+  base,
+  base_level,
+  (name, number, body, companion: none, companion-label: "证明", qed: false) => {
+    let title = heading
+    if number != none {
+      title += number
+    }
+
+    pad(top: 0.45em, bottom: 0.45em)[
+      #block(
+        width: 100%,
+        stroke: blockcolor + 2pt,
+        radius: 0pt,
+        inset: 0pt,
+        breakable: true,
+      )[
+        #stack(
+          dir: ttb,
+          spacing: 0pt,
+          block(width: 100%, fill: blockcolor, inset: (x: 1.2em, y: 0.8em), breakable: true)[
+            #set list(marker: (text(emphcolor)[•]))
+            #set enum(numbering: n => text(emphcolor)[#n.])
+            #text(font: theorem-title-font, emphcolor)[#h(-2em)#title]
+            #if name != none [
+              #text(font: theorem-title-font, emphcolor)[（#name）]
+            ]
+            #h(0.5em)
+            #body
+            #parbreak() // some ad hoc thing
+          ],
+          if companion != none {
+            block(width: 100%, fill: white, inset: (x: 1.2em, y: 0.8em), breakable: true)[
+              #h(-2em)
+              #set text(font: theorem-companion-font, style: "normal")
+              #set list(marker: (strong[•]))
+              #set enum(numbering: n => text(emphcolor)[#n.])
+              #text(emphcolor)[#companion-label]
+              #h(0.5em)
+              #companion
+              #if qed [
+                #h(1fr)#sym.qed
+              ]
+              #parbreak() // some ad hoc fix
+            ]
+          } else { none },
+        )
+      ]
     ]
-    #heading
-]
+  }
+).with(supplement: heading)
 
 // 引文块的颜色
 #let quoteblockcolor = rgb(239, 240, 243)
 
 // 引文块的格式比较特殊，单独设定
 #let quote(term, author: none) = align(center)[
-    #block(
-        width: 80%,
-        fill: quoteblockcolor,
-        inset: 8pt,
-    )[
-        #set align(left)
-        #set text(
-            font: ("Times New Roman", "FangSong")
-        )
-        #set par(
-            first-line-indent: 2em
-        )
-        #set par(
-            spacing: 0.65em
-        )
-        #term
-        #align(right)[
-            #if author != none [
-                —— #author
-            ]
-        ]
+  #block(
+    width: 80%,
+    fill: quoteblockcolor,
+    inset: 8pt,
+  )[
+    #set align(left)
+    #set text(
+      font: ("Times New Roman", "Songti SC"),
+    )
+    #set par(
+      first-line-indent: (amount: 2em, all: true),
+    )
+    #set par(
+      spacing: 0.65em,
+    )
+    #term
+    #align(right)[
+      #if author != none [
+        —— #author
+      ]
     ]
+  ]
 ]
 
-// 数学环境块
-#let mathenv(
-    term, // 正文 
-    supplement, // 补充说明（括号里面的东西）
-    counter, // 计数器，需要在模板中定义
-    blockcolor, // 块颜色，指底色
-    emphcolor, // 强调色，补充说明和编号的颜色
-    leading // 编号前面写什么
-) = figure(
-    showybox(
-        frame: (
-            body-color: blockcolor,
-            radius: 0pt,
-            border-color: blockcolor,
-        ),
-        breakable: true,
-        change_body_style(counter, emphcolor, leading, supplement, term),
-    ),
-    kind: leading,
-    supplement: [#leading]
-)
-
-// 补充数学环境块，例如例子块
-#let compmathenv(
-    term, 
-    supplement,
-    counter,
-    emphcolor,
-    leading
-) = figure(
-    showybox(
-        frame: (
-            body-color: white,
-            radius: 0pt,
-            border-color: emphcolor,
-            dash: "dashed",
-            thickness: (y: 1pt),
-            inset: (x: 0em, y: 1em)
-        ),
-        // breakable: true,
-    )[
-        #set text(
-                font: ("Times New Roman", "KaiTi"),
-                style: "normal"
-        )
-        #change_body_style(counter, emphcolor, leading, supplement, term)
-    ],
-    kind: leading,
-    supplement: [#leading]
-)
-
-// 带证明/解答的环境块
-#let mathenvWithCompanion(
-    heading, // 正文
-    supplement, 
-    counter,
-    emphcolor, 
-    blockcolor, 
-    leading1, // 第一块的编号提示词
-    leading2, // 第二块的编号提示词
-    content, // 第二块的内容
-    qed: false // 是否需要有 qed 标识
-) = figure(
-    showybox(
-        frame: (
-            body-color: blockcolor,
-            radius: 0pt,
-            border-color: blockcolor,
-            footer-color: white
-        ),
-        footer-style: (
-            color: black
-        ),
-        breakable: true,
-        footer: change_footer_style(content, emphcolor, leading2, qed),
-        change_body_style(counter, emphcolor, leading1, supplement, heading)
-    ),
-    kind: leading2,
-    supplement: [#leading1]
-)
-
 // 以下是一些预定义的环境块
-#let defcounter = counter("def")
 #let defblockcolor = rgb(220, 227, 248)
 #let defemphcolor = rgb(31, 119, 184)
 
-#let def(term, supplement: none, counter: defcounter) = mathenv(term, supplement, defcounter, defblockcolor, defemphcolor, "定义")
+#let definition-env = make-boxed-theorem("definition", "定义", defblockcolor, defemphcolor)
+#let def(term, supplement: none) = definition-env(supplement)[#term]
 
-#let rmcounter = counter("rm")
 #let rmblockcolor = rgb(255, 237, 193)
 #let rmemphcolor = rgb(215, 94, 106)
 
-#let rm(term, supplement: none, counter: rmcounter) = mathenv(term, supplement, rmcounter, rmblockcolor, rmemphcolor, "注记")
+#let remark-env = make-boxed-theorem("remark", "注记", rmblockcolor, rmemphcolor)
+#let rm(term, supplement: none) = remark-env(supplement)[#term]
 
-#let conjcounter = counter("conj")
 #let conjblockcolor = rgb(255, 213, 206)
 #let conjemphcolor = rgb(233, 66, 66)
 
-#let conj(term, supplement: none, counter: conjcounter) = mathenv(term, supplement, conjcounter, conjblockcolor, conjemphcolor, "猜想")
+#let conjecture-env = make-boxed-theorem("conjecture", "猜想", conjblockcolor, conjemphcolor)
+#let conj(term, supplement: none) = conjecture-env(supplement)[#term]
 
-#let egcounter = counter("eg")
 #let egemphcolor = rgb(130, 110, 217)
 
-#let eg(term, supplement: none, counter: egcounter) = compmathenv(term, supplement, egcounter, egemphcolor, "例")
+#let example-env = make-boxed-theorem(
+  "example",
+  "例",
+  white,
+  egemphcolor,
+  stroke: (y: (paint: egemphcolor, thickness: 1pt, dash: "dashed")),
+  inset: (x: 1.2em, y: 1em),
+  body-font: theorem-companion-font,
+)
+#let eg(term, supplement: none) = example-env(supplement)[#term]
 
-#let thmcounter = counter("thm")
 #let thmblockcolor = rgb(209, 255, 226)
 #let thmemphcolor = rgb(0, 134, 24)
 
-#let thm(heading, proof: none, supplement: none) = mathenvWithCompanion(heading, supplement, thmcounter, thmemphcolor, thmblockcolor, "定理", "证明", proof, qed: true)
+#let theorem-env = make-companion-theorem("theorem", "定理", thmblockcolor, thmemphcolor)
+#let corollary-env = make-companion-theorem("theorem", "推论", thmblockcolor, thmemphcolor)
+#let lemma-env = make-companion-theorem("theorem", "引理", thmblockcolor, thmemphcolor)
+#let proposition-env = make-companion-theorem("theorem", "命题", thmblockcolor, thmemphcolor)
 
-#let coro(heading, proof: none, supplement: none) = mathenvWithCompanion(heading, supplement, thmcounter, thmemphcolor, thmblockcolor, "推论", "证明", proof, qed: true)
+#let thm(heading, proof: none, supplement: none) = theorem-env(
+  supplement,
+  companion: proof,
+  companion-label: "证明",
+  qed: true,
+)[#heading]
 
-#let lemma(heading, proof: none, supplement: none) = mathenvWithCompanion(heading, supplement, thmcounter, thmemphcolor, thmblockcolor, "引理", "证明", proof, qed: true)
+#let coro(heading, proof: none, supplement: none) = corollary-env(
+  supplement,
+  companion: proof,
+  companion-label: "证明",
+  qed: true,
+)[#heading]
 
-#let prop(heading, proof: none, supplement: none) = mathenvWithCompanion(heading, supplement, thmcounter, thmemphcolor, thmblockcolor, "命题", "证明", proof, qed: true)
+#let lemma(heading, proof: none, supplement: none) = lemma-env(
+  supplement,
+  companion: proof,
+  companion-label: "证明",
+  qed: true,
+)[#heading]
 
-#let excounter = counter("ex")
+#let prop(heading, proof: none, supplement: none) = proposition-env(
+  supplement,
+  companion: proof,
+  companion-label: "证明",
+  qed: true,
+)[#heading]
+
 #let exemphcolor = rgb(35, 155, 171)
 #let exblockcolor = rgb(161, 255, 238)
 
-#let ex(heading, solution: none, supplement: none) = mathenvWithCompanion(heading, supplement, excounter, exemphcolor, exblockcolor, "习题", "解答", solution)
+#let exercise-env = make-companion-theorem("exercise", "习题", exblockcolor, exemphcolor)
+#let ex(heading, solution: none, supplement: none) = exercise-env(
+  supplement,
+  companion: solution,
+  companion-label: "解答",
+)[#heading]
+
+#let theorem-ref-color(identifier) = if identifier == "definition" {
+  defemphcolor
+} else if identifier == "remark" {
+  rmemphcolor
+} else if identifier == "conjecture" {
+  conjemphcolor
+} else if identifier == "example" {
+  egemphcolor
+} else if identifier == "exercise" {
+  exemphcolor
+} else {
+  thmemphcolor
+}
+
+#let todo(it) = block(fill: yellow, inset: 4pt, text(red, strong(it)))
+
+#let noindent = h(-2em)
 
 #let endofchapter() = {
-    // clearing all counters
-    context defcounter.update(0)
-    context rmcounter.update(0)
-    context egcounter.update(0)
-    context conjcounter.update(0)
-    context thmcounter.update(0)
-    context excounter.update(0)
-    [#pagebreak()]
+  [#pagebreak()]
 }
 
 #let makecontent() = [
-    #show outline: set heading(
-        numbering: (..nums) => "",
-    )
-    #outline(title: align(center)[目录])
+  #show outline: set heading(
+    numbering: (..nums) => "",
+  )
+  #outline(title: align(center)[目录])
 
-    #pagebreak()
-    #counter(heading).update(0)
+  #pagebreak()
+  #counter(heading).update(0)
 ]
 
 #let conf(doc, chapter_numbering: chinese_numbering) = {
-    set heading(
-        numbering: chapter_numbering
-    )
+  show: thmrules.with(qed-symbol: $qed$)
 
-    show heading: it => block(
-        below: {
-            if it.level == 1 {
-                25pt // 大层级与正文的距离
-            } else {
-                15pt // 小层级与正文的距离
-            }
-        },
-    )[
-        #set text(
-            font: ("Times New Roman", "SimHei"), // 标题字体
-            weight: "regular"
-        )
-        #counter(heading).display()
-        #it.body
-    ]
+  set heading(
+    numbering: chapter_numbering,
+  )
 
-    set text(
-        font: ("Times New Roman", "SimSun")
-    )
-
-    show emph: set text(
-        font: ("Times New Roman", "KaiTi"),
-    )
-
-    show strong: set text(
-        font: ("Times New Roman", "SimHei")
-    )
-
-    show raw: set text(
-        font: ("Consolas")
-    )
-
-    set enum(
-        indent: 2em,
-    )
-
-    set list(
-        indent: 2em,
-    )
-
-    set par(
-        leading: 1em,
-        first-line-indent: 2em
-    )
-
-    show figure: set block(breakable: true)
-
-    show ref: it => {
-        let eq = math.equation
-        let el = it.element
-        if el != none {
-            if el.func() == heading {
-                // for heading
-                link(el.location(), [#numbering(
-                        el.numbering, ..counter(heading).at(el.location())
-                    )])
-            // } else if el.func() == eq {
-            //     link(el.location(), [公式 #numbering(
-            //             el.numbering, ..counter(eq).at(el.location())
-            //         )])
-            } else if el.func() == figure {
-                link(el.location(), [#el.supplement #numbering(el.numbering, ..el.counter.at(el.location()))])
-            }
-        } else {
-            it
-        }
+  show heading: it => block(below: {
+    if it.level == 1 {
+      25pt // 大层级与正文的距离
+    } else {
+      15pt // 小层级与正文的距离
     }
+  })[
+    #set text(
+      font: ("Times New Roman", "Heiti SC"), // 标题字体
+      weight: "bold",
+    )
+    #counter(heading).display()
+    #it.body
+  ]
 
-    // show math.equation: x => {
-    //     show math.text: set text(
-    //         font: ("Times New Roman", "KaiTi")
-    //     )
-    //     x
-    // }
+  set text(
+    font: ("Times New Roman", "Songti SC"),
+  )
 
-    doc
+  show emph: set text(
+    font: ("Times New Roman", "Kaiti SC"),
+  )
+
+  show strong: set text(
+    font: ("Times New Roman", "Heiti SC"),
+  )
+
+  show raw: set text(
+    font: ("JetBrainsMono NF", "Menlo", "DejaVu Sans Mono"),
+  )
+
+  set enum(
+    indent: 2em,
+  )
+
+  set list(
+    indent: 2em,
+  )
+
+  set par(
+    leading: 1em,
+    first-line-indent: (amount: 2em, all: true),
+  )
+
+  show ref: it => {
+    let el = it.element
+    if el != none and el.func() == heading {
+      link(el.location(), [#numbering(
+        el.numbering,
+        ..counter(heading).at(el.location()),
+      )])
+    } else if el != none and el.func() == figure and el.kind == "thmenv" {
+      let supplement = el.supplement
+      if it.citation.supplement != none {
+        supplement = it.citation.supplement
+      }
+
+      let loc = el.location()
+      let thms = query(selector(<meta:thmenvcounter>).after(loc))
+      let identifier = thms.first().value
+      let number = thmcounters.at(thms.first().location()).at("latest")
+      let refbody = [#supplement~#numbering(el.numbering, ..number)]
+      link(
+        it.target,
+        text(
+          font: theorem-title-font,
+          weight: "bold",
+          theorem-ref-color(identifier),
+          refbody,
+        ),
+      )
+    } else {
+      it
+    }
+  }
+
+  show math.equation: set block(breakable: true)
+
+  doc
 }

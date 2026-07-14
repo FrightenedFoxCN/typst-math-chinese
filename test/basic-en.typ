@@ -43,7 +43,7 @@ Normal remarks can be made here.
 - Say, blue here.
 
 + For numbered list we'd like to have this as well.
-+ But I'm currently unaware of how to do it.
++ Now it has been possible.
 ]
 
 #thm(
