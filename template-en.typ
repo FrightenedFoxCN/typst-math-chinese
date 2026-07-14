@@ -2,6 +2,8 @@
 
 #let theorem-font = ("Times New Roman")
 
+#let is_in_appendix = state("is_in_appendix", false)
+
 #let make-boxed-theorem(
     identifier,
     heading,
@@ -10,7 +12,7 @@
     border: none,
     stroke: none,
     inset: (x: 1.2em, y: 0.8em),
-    base: "heading",
+    base: context if is_in_appendix.get() {"appendix"} else {"heading"},
     base_level: 1,
 ) = thmbox(
     identifier,
@@ -211,6 +213,11 @@
         numbering: chapter_numbering
     )
 
+    set page(
+        number-align: bottom + right,
+        numbering: "1"
+    )
+
     show ref: it => {
         let el = it.element
         if el != none and el.func() == figure and el.kind == "thmenv" {
@@ -241,7 +248,12 @@
     doc
 }
 
+#let appendices_counter = counter("appendix")
+
 #let set-appendix(doc) = {
+    is_in_appendix.update(true)
+    
+    appendices_counter.update(0)
     counter(heading).update(0)
 
     set heading(

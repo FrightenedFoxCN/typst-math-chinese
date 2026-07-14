@@ -284,6 +284,11 @@
 #let conf(doc, chapter_numbering: chinese_numbering) = {
   show: thmrules.with(qed-symbol: $qed$)
 
+  set page(
+    number-align: bottom + right,
+    numbering: "1"
+  )
+
   set heading(
     numbering: chapter_numbering,
   )
