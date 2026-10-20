@@ -8,7 +8,7 @@
   numbering("第一讲", nums)
 }
 
-#let lecture_numbering(..nums, location: none) = {
+#let lecture_numbering(..nums) = {
   if nums.pos().len() == 1 {
     lecture_numbering_inner(nums.pos().first())
   } else {
@@ -17,7 +17,7 @@
 }
 
 // 编号方式
-#let chinese_numbering(..nums, location: none) = {
+#let chinese_numbering(..nums) = {
   if nums.pos().len() == 1 {
     chapter_numbering(nums.pos().first())
   } else {
@@ -25,7 +25,7 @@
   }
 }
 
-#let appendix_numbering(..nums, location: none) = {
+#let appendix_numbering(..nums) = {
   if nums.pos().len() == 1 {
     numbering("附录 A", ..nums)
   } else {
@@ -43,8 +43,18 @@
   doc
 }
 
-#let theorem-title-font = ("Times New Roman", "Heiti SC")
-#let theorem-companion-font = ("Times New Roman", "Kaiti SC")
+// 字体组：Typst 按字形逐个回退，因此每组先列西文字体、再列中文字体，
+// 否则中文字体自带的西文字形会抢先生效。中文优先使用 macOS 系统字体，
+// 缺失时回退到开源的 Noto CJK / 霞鹜文楷。
+#let latin-fonts = ("Times New Roman", "TeX Gyre Termes")
+#let song-fonts = (..latin-fonts, "Songti SC", "Noto Serif CJK SC")
+#let hei-fonts = (..latin-fonts, "Heiti SC", "Noto Sans CJK SC")
+#let kai-fonts = (..latin-fonts, "Kaiti SC", "LXGW WenKai", "Noto Serif CJK SC")
+#let mono-fonts = ("JetBrains Mono", "JetBrainsMono NF", "Menlo", "DejaVu Sans Mono", "Noto Sans Mono CJK SC")
+
+// 旧名称，保留以兼容已有笔记
+#let theorem-title-font = hei-fonts
+#let theorem-companion-font = kai-fonts
 
 #let make-boxed-theorem(
   identifier,
@@ -69,16 +79,17 @@
   supplement: heading,
   padding: (top: 0.45em, bottom: 0.45em),
   separator: [#h(0.5em)],
-  titlefmt: title => text(font: theorem-title-font, emphcolor)[#h(-2em) #title],
-  namefmt: name => text(font: theorem-title-font, emphcolor)[（#name）],
+  titlefmt: title => text(font: hei-fonts, emphcolor, weight: "bold")[#h(-2em) #title],
+  namefmt: name => text(font: hei-fonts, emphcolor, weight: "bold")[（#name）],
   bodyfmt: body => [
     #if body-font != none {
       set text(font: body-font, style: "normal")
     }
     #set list(marker: (text(emphcolor)[•]))
-    #set enum(numbering: n => text(emphcolor)[#n.])
+    #set enum(numbering: n => text(emphcolor)[#n])
     #body
-    #parbreak() // some ad hoc thing
+    // this parbreak is important for typesetting
+    #parbreak()
   ],
 )
 
@@ -94,6 +105,7 @@
   base,
   base_level,
   (name, number, body, companion: none, companion-label: "证明", qed: false) => {
+    
     let title = heading
     if number != none {
       title += number
@@ -112,28 +124,27 @@
           spacing: 0pt,
           block(width: 100%, fill: blockcolor, inset: (x: 1.2em, y: 0.8em), breakable: true)[
             #set list(marker: (text(emphcolor)[•]))
-            #set enum(numbering: n => text(emphcolor)[#n.])
-            #text(font: theorem-title-font, emphcolor)[#h(-2em)#title]
+            #set enum(numbering: n => text(emphcolor)[#n])
+            #text(font: hei-fonts, emphcolor, weight: "bold")[#h(-2em)#title]
             #if name != none [
-              #text(font: theorem-title-font, emphcolor)[（#name）]
+              #text(font: hei-fonts, emphcolor, weight: "bold")[（#name）]
             ]
             #h(0.5em)
             #body
-            #parbreak() // some ad hoc thing
+            #parbreak()
           ],
           if companion != none {
             block(width: 100%, fill: white, inset: (x: 1.2em, y: 0.8em), breakable: true)[
               #h(-2em)
-              #set text(font: theorem-companion-font, style: "normal")
+              #set text(font: kai-fonts, style: "normal")
               #set list(marker: (strong[•]))
-              #set enum(numbering: n => text(emphcolor)[#n.])
-              #text(emphcolor)[#companion-label]
+              #text(emphcolor, weight: "bold")[#companion-label]
               #h(0.5em)
               #companion
               #if qed [
                 #h(1fr)#sym.qed
               ]
-              #parbreak() // some ad hoc fix
+              #parbreak()
             ]
           } else { none },
         )
@@ -153,15 +164,8 @@
     inset: 8pt,
   )[
     #set align(left)
-    #set text(
-      font: ("Times New Roman", "Songti SC"),
-    )
-    #set par(
-      first-line-indent: (amount: 2em, all: true),
-    )
-    #set par(
-      spacing: 0.65em,
-    )
+    #set text(font: song-fonts)
+    #set par(first-line-indent: (amount: 2em, all: true), spacing: 0.65em)
     #term
     #align(right)[
       #if author != none [
@@ -199,7 +203,7 @@
   egemphcolor,
   stroke: (y: (paint: egemphcolor, thickness: 1pt, dash: "dashed")),
   inset: (x: 1.2em, y: 1em),
-  body-font: theorem-companion-font,
+  body-font: kai-fonts,
 )
 #let eg(term, supplement: none) = example-env(supplement)[#term]
 
@@ -249,18 +253,31 @@
   companion-label: "解答",
 )[#heading]
 
-#let theorem-ref-color(identifier) = if identifier == "definition" {
-  defemphcolor
-} else if identifier == "remark" {
-  rmemphcolor
-} else if identifier == "conjecture" {
-  conjemphcolor
-} else if identifier == "example" {
-  egemphcolor
-} else if identifier == "exercise" {
-  exemphcolor
-} else {
-  thmemphcolor
+#let theorem-ref-colors = (
+  definition: defemphcolor,
+  remark: rmemphcolor,
+  conjecture: conjemphcolor,
+  example: egemphcolor,
+  exercise: exemphcolor,
+)
+#let theorem-ref-color(identifier) = theorem-ref-colors.at(identifier, default: thmemphcolor)
+
+// 以字体 font 排版 body，并对其中的汉字做缩放和基线偏移，
+// 使其字面高度、中线与当前环境的汉字一致（如楷体证明中的黑体引用）。
+// 校正量由实测“国”字的墨迹边界得到，因此对任意字体组合都适用。
+#let cjk-aligned(body, font: hei-fonts, weight: "bold") = context {
+  let probe(..args) = {
+    let edge(top, bottom) = measure(text(..args, top-edge: top, bottom-edge: bottom)[国]).height
+    (top: edge("bounds", "baseline"), bottom: edge("baseline", "bounds"))
+  }
+  let host = probe()
+  let target = probe(font: font, weight: weight)
+  let scale = (host.top + host.bottom) / (target.top + target.bottom)
+  // 中线 = (上沿 - 下沿) / 2；baseline 为正时文字下移
+  let shift = (target.top - target.bottom) * scale / 2 - (host.top - host.bottom) / 2
+  set text(font: font, weight: weight)
+  show regex("\p{Han}+"): set text(size: scale * 1em, baseline: shift)
+  body
 }
 
 #let todo(it) = block(fill: yellow, inset: 4pt, text(red, strong(it)))
@@ -272,101 +289,43 @@
 }
 
 #let makecontent() = [
-  #show outline: set heading(
-    numbering: (..nums) => "",
-  )
-  #outline(title: align(center)[目录])
-
+  #show heading: set align(center)
+  #outline(title: [目录])
   #pagebreak()
-  #counter(heading).update(0)
 ]
 
 #let conf(doc, chapter_numbering: chinese_numbering) = {
   show: thmrules.with(qed-symbol: $qed$)
 
-  set page(
-    number-align: bottom + right,
-    numbering: "1"
-  )
-
-  set heading(
-    numbering: chapter_numbering,
-  )
-
-  show heading: it => block(below: {
-    if it.level == 1 {
-      25pt // 大层级与正文的距离
-    } else {
-      15pt // 小层级与正文的距离
-    }
-  })[
-    #set text(
-      font: ("Times New Roman", "Heiti SC"), // 标题字体
-      weight: "bold",
-    )
-    #counter(heading).display()
-    #it.body
-  ]
-
-  set text(
-    font: ("Times New Roman", "Songti SC"),
-  )
-
-  show emph: set text(
-    font: ("Times New Roman", "Kaiti SC"),
-  )
-
-  show strong: set text(
-    font: ("Times New Roman", "Heiti SC"),
-  )
-
-  show raw: set text(
-    font: ("JetBrainsMono NF", "Menlo", "DejaVu Sans Mono"),
-  )
-
-  set enum(
-    indent: 2em,
-  )
-
-  set list(
-    indent: 2em,
-  )
+  set text(font: song-fonts)
+  show emph: set text(font: kai-fonts)
+  show strong: set text(font: hei-fonts)
+  show raw: set text(font: mono-fonts)
 
   set par(
     leading: 1em,
     first-line-indent: (amount: 2em, all: true),
   )
 
+  set enum(indent: 2em)
+  set list(indent: 2em)
+
+  // 引用标题时只显示编号（如“第一章”“2.1”），不加“节”等前缀
+  set heading(numbering: chapter_numbering, supplement: none)
+  show heading: set text(font: hei-fonts, weight: "bold")
+  show heading: set block(below: 15pt) // 小层级与正文的距离
+  show heading.where(level: 1): set block(below: 25pt) // 大层级与正文的距离
+
+  // 定理类引用：编号由 ctheorems 生成，这里只负责字体和着色。
+  // 引用用黑体，但汉字按所在段落（正文宋体、证明楷体）校正大小和基线。
   show ref: it => {
     let el = it.element
-    if el != none and el.func() == heading {
-      link(el.location(), [#numbering(
-        el.numbering,
-        ..counter(heading).at(el.location()),
-      )])
-    } else if el != none and el.func() == figure and el.kind == "thmenv" {
-      let supplement = el.supplement
-      if it.citation.supplement != none {
-        supplement = it.citation.supplement
-      }
-
-      let loc = el.location()
-      let thms = query(selector(<meta:thmenvcounter>).after(loc))
-      let identifier = thms.first().value
-      let number = thmcounters.at(thms.first().location()).at("latest")
-      let refbody = [#supplement~#numbering(el.numbering, ..number)]
-      link(
-        it.target,
-        text(
-          font: theorem-title-font,
-          weight: "bold",
-          theorem-ref-color(identifier),
-          refbody,
-        ),
-      )
-    } else {
-      it
+    if el == none or el.func() != figure or el.kind != "thmenv" {
+      return it
     }
+    let identifier = query(selector(<meta:thmenvcounter>).after(el.location())).first().value
+    set text(fill: theorem-ref-color(identifier))
+    cjk-aligned(it)
   }
 
   show math.equation: set block(breakable: true)
